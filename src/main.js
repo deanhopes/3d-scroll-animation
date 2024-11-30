@@ -21,6 +21,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xfefdfd);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0, 5);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -57,10 +58,29 @@ function basicAnimate() {
 
 basicAnimate();
 
+// Add this before the loader.load call, after the basicAnimate function
+function animate() {
+  animationFrameId = requestAnimationFrame(animate);
+
+  if (model && isFloating) {
+    const time = Date.now() * 0.001; // Convert to seconds
+    model.position.y = Math.sin(time * floatFrequency) * floatAmplitude;
+    model.rotation.y += rotationSpeed * 0.01;
+  }
+
+  renderer.render(scene, camera);
+}
+
 // Load the model
 let model;
 
 const loader = new GLTFLoader();
+
+// Add these declarations after scene setup and before the loader
+const scannerSection = document.querySelector(".scanner");
+const scanContainer = scannerSection.querySelector(".scan-container");
+const scanSound = new Audio("./scan.wav");
+
 loader.load("./josta.glb", function (gltf) {
   model = gltf.scene;
   model.traverse((node) => {
@@ -81,11 +101,107 @@ loader.load("./josta.glb", function (gltf) {
 
   const size = box.getSize(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z);
-  camera.position.z = maxDim * 1.5;
+  const scale = 280 / maxDim; // 280 is scan-container width
+  model.scale.setScalar(scale * 0.8); // 80% of container size
+  camera.position.z = maxDim * 2;
 
   // model.scale.set(0, 0, 0);
   playInitalAnimation();
 
   cancelAnimationFrame(animationFrameId);
   animate();
+
+  const stickyHeight = window.innerHeight;
+
+  gsap.set(scanContainer, {
+    scale: 0,
+  });
+
+  ScrollTrigger.create({
+    trigger: ".scanner",
+    start: "top top",
+    end: "+=100%",
+    pin: true,
+    pinSpacing: true,
+    anticipatePin: 1,
+    markers: true,
+    id: "scanner",
+    onEnter: () => {
+      if (!model) return;
+      
+      lenis.setVelocity(0);
+      gsap.to(lenis, {
+        duration: 0.5,
+        scrollSpeed: 0,
+        ease: "power2.out",
+        onComplete: () => lenis.stop()
+      });
+
+      isFloating = false;
+      
+      gsap.timeline({
+        defaults: { ease: "power2.inOut" }
+      })
+      .to(model.position, {
+        y: 0,
+        duration: 0.5
+      })
+      .to(model.rotation, {
+        y: model.rotation.y + Math.PI * 2,
+        duration: 1.5
+      })
+      .add(() => {
+        scanSound.currentTime = 0;
+        scanSound.play();
+      })
+      .to(model.scale, {
+        x: 0,
+        y: 0,
+        z: 0,
+        duration: 0.8
+      })
+      .to(scanContainer, {
+        scale: 0,
+        duration: 1,
+        onComplete: () => {
+          lenis.start();
+          gsap.to(lenis, {
+            duration: 0.5,
+            scrollSpeed: 1,
+            ease: "power2.in"
+          });
+        }
+      });
+    },
+    onLeaveBack: () => {
+      if (!model) return;
+      isFloating = true;
+      playInitalAnimation();
+    }
+  });
 });
+
+const floatAmplitude = 0.05;
+const floatFrequency = 1.5;
+const rotationSpeed = 0.25;
+
+let isFloating = true;
+let currentScroll = 0;
+
+function playInitalAnimation() {
+  if (model) {
+    gsap.to(model.scale, {
+      x: 1,
+      y: 1,
+      z: 1,
+      duration: 1,
+      ease: "power2.inOut",
+    });
+  }
+  gsap.to(scanContainer, {
+    scale: 1,
+    duration: 1,
+    ease: "power2.inOut",
+  });
+}
+
