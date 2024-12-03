@@ -4,6 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import * as THREE from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 
 // Register GSAP ScrollTrigger
 gsap.registerPlugin(ScrollTrigger);
@@ -34,15 +35,15 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 3.0;
 document.querySelector(".model").appendChild(renderer.domElement);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 3);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
 directionalLight.position.set(10, 10, 10);
 scene.add(directionalLight);
 
 const fillLight = new THREE.DirectionalLight(0xffffff, 1);
-fillLight.position.set(-10, 10, -10);
+fillLight.position.set(-10, -10, -10);
 scene.add(fillLight);
 
 const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x080808, 3);
@@ -58,7 +59,6 @@ function basicAnimate() {
 
 basicAnimate();
 
-// Add this before the loader.load call, after the basicAnimate function
 function animate() {
   animationFrameId = requestAnimationFrame(animate);
 
@@ -86,7 +86,7 @@ loader.load("./josta.glb", function (gltf) {
   model.traverse((node) => {
     if (node.isMesh) {
       if (node.material) {
-        node.material.metalness = 0.5;
+        node.material.metalness = 0.9;
         node.material.roughness = 0.5;
         node.material.envMapIntensity = 1.5;
       }
@@ -120,7 +120,7 @@ loader.load("./josta.glb", function (gltf) {
   ScrollTrigger.create({
     trigger: ".scanner",
     start: "top top",
-    end: "+=100%",
+    end: "100%",
     pin: true,
     pinSpacing: true,
     anticipatePin: 1,
@@ -128,7 +128,7 @@ loader.load("./josta.glb", function (gltf) {
     id: "scanner",
     onEnter: () => {
       if (!model) return;
-      
+
       lenis.setVelocity(0);
       gsap.to(lenis, {
         duration: 0.5,
@@ -138,40 +138,40 @@ loader.load("./josta.glb", function (gltf) {
       });
 
       isFloating = false;
-      
+
       gsap.timeline({
         defaults: { ease: "power2.inOut" }
       })
-      .to(model.position, {
-        y: 0,
-        duration: 0.5
-      })
-      .to(model.rotation, {
-        y: model.rotation.y + Math.PI * 2,
-        duration: 1.5
-      })
-      .add(() => {
-        scanSound.currentTime = 0;
-        scanSound.play();
-      })
-      .to(model.scale, {
-        x: 0,
-        y: 0,
-        z: 0,
-        duration: 0.8
-      })
-      .to(scanContainer, {
-        scale: 0,
-        duration: 1,
-        onComplete: () => {
-          lenis.start();
-          gsap.to(lenis, {
-            duration: 0.5,
-            scrollSpeed: 1,
-            ease: "power2.in"
-          });
-        }
-      });
+        .to(model.position, {
+          y: 0,
+          duration: 0.5
+        })
+        .to(model.rotation, {
+          y: model.rotation.y + Math.PI * 2,
+          duration: 1.5
+        })
+        .add(() => {
+          scanSound.currentTime = 0;
+          scanSound.play();
+        })
+        .to(model.scale, {
+          x: 0,
+          y: 0,
+          z: 0,
+          duration: 0.8
+        })
+        .to(scanContainer, {
+          scale: 0,
+          duration: 1,
+          onComplete: () => {
+            lenis.start();
+            gsap.to(lenis, {
+              duration: 0.5,
+              scrollSpeed: 1,
+              ease: "power2.in"
+            });
+          }
+        });
     },
     onLeaveBack: () => {
       if (!model) return;
@@ -204,4 +204,31 @@ function playInitalAnimation() {
     ease: "power2.inOut",
   });
 }
+
+// Update the RGBE loader implementation
+const rgbeLoader = new RGBELoader();
+rgbeLoader.setPath('/');  // Make sure this path is correct for your project structure
+rgbeLoader.load(
+  'studio_small_09_2k.hdr',  // Make sure this file exists and the name is exact
+  (texture) => {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = texture;
+
+    // Update renderer settings
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 2.5;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;  // Updated from outputEncoding
+  },
+  // Progress callback
+  (progress) => {
+    console.log('Loading HDR:', (progress.loaded / progress.total * 100) + '%');
+  },
+  // Error callback
+  (error) => {
+    console.error('Error loading HDR:', error);
+    // Fallback to a basic environment
+    scene.environment = null;
+    renderer.toneMapping = THREE.NoToneMapping;
+  }
+);
 
