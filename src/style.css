@@ -154,6 +154,7 @@ section {
   height: 70vh;
   width: 70vw;
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
 }
 
@@ -167,6 +168,10 @@ section {
   justify-content: center;
   position: relative;
   overflow: hidden;
+}
+
+.barcode-container {
+  width: 100%;
 }
 
 .barcode {

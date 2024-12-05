@@ -5,9 +5,10 @@ import Lenis from "lenis";
 import * as THREE from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { SplitText } from "gsap-trial/SplitText";
 
 // Register the ScrollTrigger plugin
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, SplitText);
 
 // Configuration constants
 const CONFIG = {
@@ -225,25 +226,63 @@ const setupScrollTriggers = () => {
       pin: true,
       pinSpacing: false,
       onEnter: () => {
+        // Stop model floating
         sceneManager.isFloating = false;
+
+        // Animate model scale
         sceneManager.scaleModel(sceneManager.targetScale);
 
-        // Animate scan container
+        // Enhanced scan container animation
         gsap.to(".scan-container", {
           scale: 0,
-          duration: 1,
-          ease: "power2.inOut"
+          opacity: 0,
+          // rotation: 15,
+          duration: 1.2,
+          ease: "power4.inOut",
+          transformOrigin: "center center",
+          filter: "blur(10px)",
+          stagger: {
+            from: "center",
+            amount: 0.3
+          }
+        });
+
+        // Animate scan info elements
+        gsap.to([".product-id", ".barcode-container"], {
+          opacity: 0,
+          y: -30,
+          duration: 0.8,
+          ease: "power3.out",
+          stagger: 0.1
         });
       },
       onEnterBack: () => {
+        // Resume model floating
         sceneManager.isFloating = true;
+
+        // Reset model scale
         sceneManager.scaleModel(sceneManager.initialScale);
 
-        // Reset scan container
+        // Enhanced scan container reverse animation
         gsap.to(".scan-container", {
           scale: 1,
+          opacity: 1,
+          rotation: 0,
+          duration: 1.5,
+          ease: "power4.inOut",
+          transformOrigin: "center center",
+          filter: "blur(0px)",
+          clearProps: "all"
+        });
+
+        // Animate scan info elements back
+        gsap.to([".product-id", ".barcode-container"], {
+          opacity: 1,
+          y: 0,
           duration: 1,
-          ease: "power2.inOut"
+          ease: "power2.out",
+          stagger: 0.15,
+          clearProps: "all"
         });
       }
     }
@@ -251,4 +290,106 @@ const setupScrollTriggers = () => {
 };
 
 setupScrollTriggers();
+
+// Add this function after the SceneManager class
+const setupTextAnimations = () => {
+  // Split all text elements we want to animate
+  const heroTitle = new SplitText("h1", { type: "chars, words" });
+  const heroSubtitle = new SplitText("h2", { type: "chars, words" });
+  const heroParagraph = new SplitText(".hero p", { type: "lines" });
+  const infoParagraph = new SplitText(".info p", { type: "lines" });
+  const tags = gsap.utils.toArray(".tags span");
+  const infoTitle = new SplitText(".info h2", { type: "lines" });
+
+  // Hero Section Animation
+  gsap.from(heroTitle.chars, {
+    opacity: 0,
+    y: 100,
+    rotateX: -90,
+    stagger: 0.02,
+    duration: 1,
+    ease: "back.out(1.7)",
+    scrollTrigger: {
+      trigger: ".hero",
+      start: "top 80%",
+      end: "top 20%",
+      scrub: 1,
+      // markers: true, // Uncomment for debugging
+    }
+  });
+
+  gsap.from(heroSubtitle.chars, {
+    opacity: 0,
+    y: 50,
+    stagger: 0.02,
+    duration: 0.8,
+    ease: "back.out(1.7)",
+    scrollTrigger: {
+      trigger: ".hero h2",
+      start: "top 80%",
+      end: "top 20%",
+      scrub: 1,
+    }
+  });
+
+  gsap.from(heroParagraph.lines, {
+    opacity: 0,
+    y: 20,
+    stagger: 0.1,
+    duration: 0.8,
+    ease: "power2.out",
+    scrollTrigger: {
+      trigger: ".hero p",
+      start: "top 80%",
+      end: "top 20%",
+      scrub: 1,
+    }
+  });
+
+  // Info Section Animation
+  gsap.from(tags, {
+    opacity: 0,
+    y: 30,
+    stagger: 0.1,
+    duration: 0.8,
+    ease: "back.out(1.7)",
+    scrollTrigger: {
+      trigger: ".info .tags",
+      start: "top 80%",
+      end: "top 20%",
+      scrub: 1,
+    }
+  });
+
+  gsap.from(infoTitle.lines, {
+    opacity: 0,
+    y: 50,
+    stagger: 0.1,
+    duration: 1,
+    ease: "power2.out",
+    scrollTrigger: {
+      trigger: ".info h2",
+      start: "top 80%",
+      end: "top 20%",
+      scrub: 1,
+    }
+  });
+
+  gsap.from(infoParagraph.lines, {
+    opacity: 0,
+    y: 30,
+    stagger: 0.1,
+    duration: 0.8,
+    ease: "power2.out",
+    scrollTrigger: {
+      trigger: ".info p",
+      start: "top 80%",
+      end: "top 20%",
+      scrub: 1,
+    }
+  });
+};
+
+// Add this line after setupScrollTriggers();
+setupTextAnimations();
 
