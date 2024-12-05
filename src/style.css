@@ -151,16 +151,15 @@ section {
 
 .scan-info {
   position: absolute;
-  height: 100vh;
-  width: 100vw;
+  height: 70vh;
+  width: 70vw;
   display: flex;
   justify-content: space-between;
-  padding: 2em;
 }
 
 .scan-container {
   width: 280px;
-  height: 480px;
+  height: 520px;
   border: 1px solid #000;
   border-radius: 1em;
   display: flex;

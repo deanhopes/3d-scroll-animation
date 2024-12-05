@@ -145,14 +145,33 @@ class SceneManager {
 
   setupModelProperties() {
     this.model.traverse((node) => {
-      if (node.isMesh) {
-        Object.assign(node.material, {
+      if (!node.isMesh) return;
+      
+      // Create a new material if one doesn't exist
+      if (!node.material) {
+        node.material = new THREE.MeshStandardMaterial();
+      }
+
+      // Handle both single materials and material arrays
+      const materials = Array.isArray(node.material) ? node.material : [node.material];
+      
+      materials.forEach(material => {
+        Object.assign(material, {
           metalness: 0.9,
           roughness: 0.5,
           envMapIntensity: 1.5,
+          transparent: true,
+          opacity: 1,
         });
-        node.castShadow = true;
-        node.receiveShadow = true;
+      });
+
+      node.castShadow = true;
+      node.receiveShadow = true;
+      
+      // Optimize geometry if possible
+      if (node.geometry) {
+        node.geometry.computeBoundingSphere();
+        node.geometry.computeBoundingBox();
       }
     });
   }
@@ -204,7 +223,7 @@ const setupScrollTriggers = () => {
       start: "top top",
       end: () => `${window.innerHeight}px`,
       pin: true,
-      // pinSpacing: false,
+      pinSpacing: false,
       onEnter: () => {
         sceneManager.isFloating = false;
         sceneManager.scaleModel(sceneManager.targetScale);
