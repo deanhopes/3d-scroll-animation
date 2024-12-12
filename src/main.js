@@ -147,7 +147,7 @@ class SceneManager {
   setupModelProperties() {
     this.model.traverse((node) => {
       if (!node.isMesh) return;
-      
+
       // Create a new material if one doesn't exist
       if (!node.material) {
         node.material = new THREE.MeshStandardMaterial();
@@ -155,7 +155,7 @@ class SceneManager {
 
       // Handle both single materials and material arrays
       const materials = Array.isArray(node.material) ? node.material : [node.material];
-      
+
       materials.forEach(material => {
         Object.assign(material, {
           metalness: 0.9,
@@ -168,7 +168,7 @@ class SceneManager {
 
       node.castShadow = true;
       node.receiveShadow = true;
-      
+
       // Optimize geometry if possible
       if (node.geometry) {
         node.geometry.computeBoundingSphere();
@@ -295,7 +295,8 @@ setupScrollTriggers();
 const setupTextAnimations = () => {
   // Split all text elements we want to animate
   const heroTitle = new SplitText("h1", { type: "chars, words" });
-  const heroSubtitle = new SplitText("h2", { type: "chars, words" });
+  const heroSubtitle = new SplitText(".hero h2", { type: "chars, words" });
+  const outroTitle = new SplitText(".outro h2", { type: "chars, words" });
   const heroParagraph = new SplitText(".hero p", { type: "lines" });
   const infoParagraph = new SplitText(".info p", { type: "lines" });
   const tags = gsap.utils.toArray(".tags span");
@@ -312,8 +313,8 @@ const setupTextAnimations = () => {
     scrollTrigger: {
       trigger: ".hero",
       start: "top 80%",
-      end: "top 20%",
-      scrub: 1,
+      end: "bottom 10%",
+      // scrub: 1,
       // markers: true, // Uncomment for debugging
     }
   });
@@ -328,7 +329,7 @@ const setupTextAnimations = () => {
       trigger: ".hero h2",
       start: "top 80%",
       end: "top 20%",
-      scrub: 1,
+      // scrub: 1,
     }
   });
 
@@ -342,7 +343,21 @@ const setupTextAnimations = () => {
       trigger: ".hero p",
       start: "top 80%",
       end: "top 20%",
-      scrub: 1,
+      // scrub: 1,
+    }
+  });
+
+  gsap.from(outroTitle.chars, {
+    opacity: 0,
+    y: 50,
+    stagger: 0.01,
+    duration: 0.8,
+    ease: "back.out(1.2)",
+    scrollTrigger: {
+      trigger: ".outro h2",
+      start: "top 80%",
+      end: "top 20%",
+      // scrub: 1,
     }
   });
 
@@ -357,7 +372,7 @@ const setupTextAnimations = () => {
       trigger: ".info .tags",
       start: "top 80%",
       end: "top 20%",
-      scrub: 1,
+      // scrub: 1,
     }
   });
 
@@ -371,7 +386,7 @@ const setupTextAnimations = () => {
       trigger: ".info h2",
       start: "top 80%",
       end: "top 20%",
-      scrub: 1,
+      // scrub: 1,
     }
   });
 
@@ -385,7 +400,7 @@ const setupTextAnimations = () => {
       trigger: ".info p",
       start: "top 80%",
       end: "top 20%",
-      scrub: 1,
+      // scrub: 1,
     }
   });
 };
